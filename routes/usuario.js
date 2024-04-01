@@ -10,9 +10,11 @@ router.get('/', (req, res) => {
         res.send(error);
     }
 });
-router.post('/iniciar-sesion', async (req,res) => {
+
+//EndPoint para el inicio de sesion
+router.post('/iniciar-sesion', async (req, res) => {
     try {
-        const { correo, password} = req.body;
+        const { correo, password } = req.body;
         const usuario = await Usuario.findOne({
             where: {
                 correo: correo
@@ -20,17 +22,19 @@ router.post('/iniciar-sesion', async (req,res) => {
         })
         console.log(usuario)
         if (!usuario) {
-            res.send({"error":"Correo incorrecto"})
+            res.send({ "error": "Correo incorrecto" })
 
         }
-        if (usuario.password != password){
-            res.send({"error":"Password incorrecto"})
+        if (usuario.password != password) {
+            res.send({ "error": "Password incorrecto" })
         }
-        res.send({"token": generarToken(usuario.nombre, usuario.apellidos, usuario.ci)})
+        res.send({ "token": generarToken(usuario.nombre, usuario.apellidos, usuario.ci) })
     } catch (error) {
-        
+
     }
 })
+
+//EndPoint para crear nuevos usuarios
 router.post('/registro', (req, res) => {
     try {
         const user = Usuario.create(req.body);
@@ -39,6 +43,50 @@ router.post('/registro', (req, res) => {
         res.send(error);
     }
 });
+
+//EndPoint para registrar datos de usuarios
+router.post('/actualizar-password', (req, res) => {
+    try {
+        const { correo, password } = req.body();
+        const usuario = Usuario.findOne({
+            where: {
+                correo: correo
+            }
+        })
+        if (usuario) {
+            usuario.password = password
+            usuario.save();
+        }
+
+        res.send({ "token": generarToken(usuario.nombre, usuario.apellidos, usuario.ci) })
+    } catch (error) {
+
+    }
+})
+
+//EndPoint para verificar el PIN de recuperacion de contraseña
+router.post('/ver-pin', (req, res) => {
+    try {
+        const { pin, correo } = req.body;
+        const usuario = Usuario.findOne({
+            where: {
+                correo: correo,
+                pin_rec: pin
+            }
+        });
+
+
+        // Si el usuario no se encuentra, lanzamos un error
+        if (!usuario) {
+            throw new Error('PIN incorrecto');
+        }
+        res.sendStatus(200)
+    } catch (error) {
+        res.send(error)
+    }
+})
+
+//EndPoint para mandar un correo con el PIN de recuperacion
 router.post('/email', async (req, res) => {
     try {
         const { correo } = req.body;
@@ -48,7 +96,7 @@ router.post('/email', async (req, res) => {
             }
         });
         await emailRec(user);
-        res.send(user);
+        res.sendStatus(200);
     } catch (error) {
         console.log(error);
         res.send(error);
@@ -56,10 +104,12 @@ router.post('/email', async (req, res) => {
 });
 router.post('/hora', (req, res) => {
     try {
-        res.send({fecha:fecha()})
+        res.send({ fecha: fecha() })
     } catch (error) {
         res.send(error)
     }
 })
+
+
 
 module.exports = router;

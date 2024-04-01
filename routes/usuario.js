@@ -65,24 +65,23 @@ router.post('/actualizar-password', (req, res) => {
 })
 
 //EndPoint para verificar el PIN de recuperacion de contraseña
-router.post('/ver-pin', (req, res) => {
+router.post('/ver-pin', async (req, res) => {
     try {
         const { pin, correo } = req.body;
-        const usuario = Usuario.findOne({
+        const usuario =await  Usuario.findOne({
             where: {
-                correo: correo,
-                pin_rec: pin
+                correo: correo
             }
         });
-
-
         // Si el usuario no se encuentra, lanzamos un error
-        if (!usuario) {
-            throw new Error('PIN incorrecto');
+        if (usuario) {
+            if(usuario.pin_rec != pin) {
+                throw new Error('PIN incorrecto');
+            }
         }
         res.sendStatus(200)
     } catch (error) {
-        res.send(error)
+        res.status(400).send({ error: error.message });
     }
 })
 
